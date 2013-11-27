@@ -35,6 +35,12 @@ void error(const char *msg) {
 	exit(1);
 }
 
+SocketServer::SocketServer(Device* device) {
+	this->device = device;
+	this->sockfd = 0;
+}
+
+
 /**
  * Open the server socket.
  */
@@ -70,6 +76,32 @@ void SocketServer::acceptConnection()
 	if (newsockfd < 0)
 		error("ERROR on accept");
 
+	uint8_t rxbuffer[64];
+
+	for (;;) {
+		int bytesRead = device->blockingRead(rxbuffer, 60000);
+		if (bytesRead > 0) {
+			char line[80];
+			for (int i = 0; i<bytesRead; i++) {
+				if (!(i % 8)) {
+					sprintf(line, "\n");
+					write(newsockfd, line, strlen(line));
+				}
+
+				sprintf(line, "%.2X ", rxbuffer[i]);
+				write(newsockfd, line, strlen(line));
+			}
+			sprintf(line, "\n");
+			write(newsockfd, line, strlen(line));
+
+		} else {
+			const char* TIMEOUT = "Timeout\n";
+			write(newsockfd, TIMEOUT, strlen(TIMEOUT));
+		}
+	}
+
+
+	/*
 	const int MAX_LINE_LENGTH = 10; // TODO: Make larger
 	char line[MAX_LINE_LENGTH];
 	int i = 0;
@@ -94,6 +126,7 @@ void SocketServer::acceptConnection()
 			i = 0;
 		}
 	}
+	 */
 
 	close(newsockfd);
 }

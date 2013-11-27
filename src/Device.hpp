@@ -17,23 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETSERVER_HPP_
-#define SOCKETSERVER_HPP_
+#ifndef DEVICE_HPP_
+#define DEVICE_HPP_
 
-#include "Device.hpp"
+#include "Spi.hpp"
+#include "Gpio.hpp"
+#include "RegConfiguration.hpp"
 
-class SocketServer
-{
-	Device* device; // RF module
-
-	int sockfd;
+/**
+ * Represents a CC1101 based RF communication module.
+ */
+class Device {
+	Spi* spi;
+	Gpio* gpio;
 
 public:
-	SocketServer(Device* device);
+	Device(Spi* spi, Gpio* gpio);
 
-	void open(int portno);
-	void acceptConnection();
-	void closeConnection();
+	void reset();
+	void configureRegisters(RegConfiguration* configuration);
+
+	int blockingRead(uint8_t buffer[], int timeoutMillis);
 };
 
-#endif /* SOCKETSERVER_HPP_ */
+#endif /* DEVICE_HPP_ */

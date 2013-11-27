@@ -20,11 +20,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include"SocketServer.hpp"
+#include "SocketServer.hpp"
+#include "Spi.hpp"
+#include "Device.hpp"
+#include "Gpio.hpp"
+#include "RegConfigurationHR80.hpp"
 
 int main(int argc, char** argv) {
 
-	SocketServer serverSocket;
+	// Set up SPI interface
+	Spi spi("/dev/spidev0.0", 8, 5 * 1000 * 1000);
+
+	// Set up GPIO Pin 25 as input pin.
+	Gpio gpio("25");
+	gpio.unexportPin();
+	sleep(1);
+	gpio.exportPin();
+	gpio.setPinDirection(DIRECTION_IN);
+	gpio.setPinEdge(EDGE_RISING);
+
+	// Set up the RF module
+	Device device(&spi, &gpio);
+	device.reset();
+	device.configureRegisters(new RegConfigurationHR80());
+
+	SocketServer serverSocket(&device);
 
 	serverSocket.open(50000);
 

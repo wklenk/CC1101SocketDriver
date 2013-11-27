@@ -17,23 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETSERVER_HPP_
-#define SOCKETSERVER_HPP_
+#ifndef REGCONFIGURATIONHR80_HPP_
+#define REGCONFIGURATIONHR80_HPP_
 
-#include "Device.hpp"
+#include <stdint.h>
+#include <stddef.h>
 
-class SocketServer
-{
-	Device* device; // RF module
+#include "RegConfiguration.hpp"
 
-	int sockfd;
+/**
+ * Register configuration for Honeywell HR80 radiator controller.
+ */
+class RegConfigurationHR80 : public RegConfiguration {
+private:
+	static const uint8_t register_configuration[];
 
 public:
-	SocketServer(Device* device);
-
-	void open(int portno);
-	void acceptConnection();
-	void closeConnection();
+	virtual const uint8_t* getValues() {
+		return this->register_configuration;
+	}
 };
 
-#endif /* SOCKETSERVER_HPP_ */
+
+#endif /* REGCONFIGURATIONHR80_HPP_ */

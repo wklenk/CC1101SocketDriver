@@ -31,6 +31,9 @@ private:
 	int fd_spi;
 
 public:
+	Spi(const char* device, uint8_t bits, uint32_t speed);
+	~Spi();
+
 	uint8_t readSingleByte(const uint8_t address, uint8_t& value);
 	uint8_t readBurst(const uint8_t address, uint8_t buffer[], const size_t nbytes);
 	uint8_t readStrobe(const uint8_t address);

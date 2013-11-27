@@ -21,8 +21,30 @@
 #include <linux/spi/spidev.h>
 #include <sys/ioctl.h>
 #include <string.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "Spi.hpp"
+
+Spi::Spi(const char* device, uint8_t bits, uint32_t speed) {
+
+	this->bits = bits;
+	this->speed = speed;
+
+	this->fd_spi = open(device, O_RDWR);
+	if (this->fd_spi < 0) {
+		fprintf(stderr, "Can't open device %s\n", device);
+		exit(1);
+	}
+}
+
+Spi::~Spi() {
+	if (this->fd_spi >= 0) {
+		close(this->fd_spi);
+	}
+}
 
 uint8_t Spi::readSingleByte(const uint8_t address, uint8_t& value) {
 

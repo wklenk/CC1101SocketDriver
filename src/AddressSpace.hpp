@@ -24,7 +24,9 @@
 
 static const uint8_t ADDR_RXTX_FIFO = 0x3F;
 
-static const uint8_t STROBE_SFRX = 0x3A;
+static const uint8_t STROBE_SRES = 0x30; // Reset chip.
+static const uint8_t STROBE_SRX  = 0x34; // Enable RX.
+static const uint8_t STROBE_SFRX = 0x3A; // Flush the RX FIFO buffer.
 
 
 #endif /* ADRESSSPACE_HPP_ */

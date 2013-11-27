@@ -17,23 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETSERVER_HPP_
-#define SOCKETSERVER_HPP_
+#ifndef REGCONFIGURATION_HPP_
+#define REGCONFIGURATION_HPP_
 
-#include "Device.hpp"
+#include <stdint.h>
+#include <stddef.h>
 
-class SocketServer
-{
-	Device* device; // RF module
-
-	int sockfd;
-
+/**
+ * Abstract CC1101 register configuration.
+ * All 47 settings from 0x00 to 0x2E need to be provided.
+ */
+class RegConfiguration {
 public:
-	SocketServer(Device* device);
-
-	void open(int portno);
-	void acceptConnection();
-	void closeConnection();
+	virtual const uint8_t* getValues() = 0;
 };
 
-#endif /* SOCKETSERVER_HPP_ */
+
+#endif /* REGCONFIGURATION_HPP_ */

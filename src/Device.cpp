@@ -17,23 +17,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETSERVER_HPP_
-#define SOCKETSERVER_HPP_
-
 #include "Device.hpp"
 
-class SocketServer
-{
-	Device* device; // RF module
+#include "AddressSpace.hpp"
 
-	int sockfd;
+Device::Device(Spi* spi, Gpio* gpio) {
+	this->spi = spi;
+	this->gpio = gpio;
+}
 
-public:
-	SocketServer(Device* device);
+void Device::reset() {
+	this->spi->readStrobe(STROBE_SRES);
+}
 
-	void open(int portno);
-	void acceptConnection();
-	void closeConnection();
-};
+void Device::configureRegisters(RegConfiguration* configuration) {
+	// Number of registers: 0x2E
+	// Configure all registers in a single write burst.
+	this->spi->writeBurst(0x00, configuration->getValues(), 0x2E);
+}
 
-#endif /* SOCKETSERVER_HPP_ */
+int Device::blockingRead(uint8_t buffer[], int timeoutMillis) {
+
+	spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
+	spi->readStrobe(STROBE_SRX);  // Enable RX mode
+
+	if (gpio->waitForPinValueChange(timeoutMillis) != 0) {
+		// GPIO input pin raised -> data available
+		spi->readBurst(ADDR_RXTX_FIFO, buffer, 64);
+		return 64; // TODO: Be more flexible
+	} else {
+		// Timeout. Nothing received.
+		return 0;
+	}
+}
