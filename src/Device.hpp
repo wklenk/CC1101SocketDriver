@@ -23,6 +23,7 @@
 #include "Spi.hpp"
 #include "Gpio.hpp"
 #include "RegConfiguration.hpp"
+#include "DataFrame.hpp"
 
 /**
  * Represents a CC1101 based RF communication module.
@@ -30,14 +31,15 @@
 class Device {
 	Spi* spi;
 	Gpio* gpio;
+	DataFrame* dataFrame;
 
 public:
-	Device(Spi* spi, Gpio* gpio);
+	Device(Spi* spi, Gpio* gpio, DataFrame* dataFrame);
 
 	void reset();
 	void configureRegisters(RegConfiguration* configuration);
 
-	int blockingRead(uint8_t buffer[], int timeoutMillis);
+	DataFrame* blockingRead(int timeoutMillis);
 };
 
 #endif /* DEVICE_HPP_ */

@@ -51,7 +51,7 @@ void Gpio::exportPin() {
 
 	int rc = write(fd, this->pin, strlen(this->pin));
 	if(rc != strlen(pin)) {
-		perror("write export"));
+		perror("write export");
 		exit(1);
 	}
 
@@ -72,7 +72,7 @@ void Gpio::unexportPin() {
 
 	int rc = write(fd, this->pin, strlen(this->pin));
 	if(rc != strlen(pin)) {
-		perror("write unexport"));
+		perror("write unexport");
 		exit(1);
 	}
 	

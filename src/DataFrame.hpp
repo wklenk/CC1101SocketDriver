@@ -20,6 +20,9 @@
 #ifndef DATAFRAME_HPP_
 #define DATAFRAME_HPP_
 
+#include <stdint.h>
+#include <stddef.h>
+
 #include "Spi.hpp"
 
 /**
@@ -34,13 +37,24 @@
  * Byte n+2: LQI (Link Quality Indicator)
  */
 class DataFrame {
-
+private:
 	Spi *spi;
 
 public:
+	uint8_t status;
+
+	uint8_t buffer[64];
+	uint8_t len;
+
+	uint8_t srcAddress;
+	uint8_t destAddress;
+
+	int rssi;
+	uint8_t lqi;
+
 	DataFrame(Spi* spi);
 
-	int receive(uint8_t buffer[], size_t& nbytes, uint8_t& srcAddress, uint8_t& destAddress, uint8_t& rssi , uint8_t&  lqi);
+	int receive();
 };
 
 

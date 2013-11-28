@@ -30,44 +30,43 @@ DataFrame::DataFrame(Spi* spi) {
  * complete frame exists in the RX FIFO. This method has no extra checking
  * for incomplete frames.
  */
-int DataFrame::receive(uint8_t buffer[], size_t& nbytes, uint8_t& srcAddress, uint8_t& destAddress, uint8_t& rssi , uint8_t&  lqi) {
+int DataFrame::receive() {
 
 	// Read Byte 0: Number of following bytes (n).
-	uint8_t len;
-	uint8_t status = this->spi->readSingleByte(ADDR_RXTX_FIFO, len);
+	this->status = this->spi->readSingleByte(ADDR_RXTX_FIFO, this->len);
 
 	// Read Byte 1: Destination address
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, destAddress);
+	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->destAddress);
 
 	// Read Byte 2: Source address
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, srcAddress);
+	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->srcAddress);
 
 	// Read Byte 3 to Byte n: Payload
-	len -= 2; // Subtract the 2 address bytes
-	this->spi->readBurst(ADDR_RXTX_FIFO, buffer, len);
-	nbytes = len;
+	this->len -= 2; // Subtract the 2 address bytes
+	this->spi->readBurst(ADDR_RXTX_FIFO, this->buffer, this->len);
 
 	// Read Byte n+1: RSSI (Received Signal Strength Indicator)
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, rssi);
+	uint8_t rssiEncoded;
+	this->spi->readSingleByte(ADDR_RXTX_FIFO, rssiEncoded);
 
 	// RSSI is coded as 2's complement see section 17.3 RSSI of the CC101 datasheet
-	if (rssi >= 128) {
-		rssi = ((rssi - 256) >> 1) - 74;
+	if (rssiEncoded >= 128) {
+		this->rssi = ((rssiEncoded - 256) >> 1) - 74;
 	} else {
-		rssi = (rssi >> 1) - 74;
+		this->rssi = (rssiEncoded >> 1) - 74;
 	}
 
 	// Read Byte n+2: LQI (Link Quality Indicator)
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, lqi);
+	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->lqi);
 	// Checksum OK?
-	if ((lqi & 0x80) == 0) {
+	if ((this->lqi & 0x80) == 0) {
 		return -1; // CRC error in received data
 	}
 
-	lqi = lqi & 0x7F; // Strip off the CRC bit
+	this->lqi = this->lqi & 0x7F; // Strip off the CRC bit
 
 	// Handle potential RX overflows by flushing the RF FIFO
-	if ((status & 0xF0) == 0x60) {
+	if ((this->status & 0xF0) == 0x60) {
 		this->spi->readStrobe(STROBE_SFRX);
 	}
 

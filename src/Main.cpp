@@ -24,7 +24,10 @@
 #include "Spi.hpp"
 #include "Device.hpp"
 #include "Gpio.hpp"
+#include "DataFrame.hpp"
 #include "RegConfigurationHR80.hpp"
+#include "RegConfigurationProfile0_27MHz.hpp"
+
 
 int main(int argc, char** argv) {
 
@@ -39,10 +42,14 @@ int main(int argc, char** argv) {
 	gpio.setPinDirection(DIRECTION_IN);
 	gpio.setPinEdge(EDGE_RISING);
 
+	DataFrame dataFrame(&spi);
+
+
 	// Set up the RF module
-	Device device(&spi, &gpio);
+	Device device(&spi, &gpio, &dataFrame);
 	device.reset();
-	device.configureRegisters(new RegConfigurationHR80());
+	//device.configureRegisters(new RegConfigurationHR80());
+	device.configureRegisters(new RegConfigurationProfile0_27MHz());
 
 	SocketServer serverSocket(&device);
 

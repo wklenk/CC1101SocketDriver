@@ -21,9 +21,10 @@
 
 #include "AddressSpace.hpp"
 
-Device::Device(Spi* spi, Gpio* gpio) {
+Device::Device(Spi* spi, Gpio* gpio, DataFrame* dataFrame) {
 	this->spi = spi;
 	this->gpio = gpio;
+	this->dataFrame = dataFrame;
 }
 
 void Device::reset() {
@@ -36,17 +37,24 @@ void Device::configureRegisters(RegConfiguration* configuration) {
 	this->spi->writeBurst(0x00, configuration->getValues(), 0x2E);
 }
 
-int Device::blockingRead(uint8_t buffer[], int timeoutMillis) {
+DataFrame* Device::blockingRead(int timeoutMillis) {
 
 	spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
 	spi->readStrobe(STROBE_SRX);  // Enable RX mode
 
 	if (gpio->waitForPinValueChange(timeoutMillis) != 0) {
 		// GPIO input pin raised -> data available
-		spi->readBurst(ADDR_RXTX_FIFO, buffer, 64);
-		return 64; // TODO: Be more flexible
+
+		if (this->dataFrame->receive() < 0) {
+			// CRC error
+			return NULL;
+		}
+
+		// Return the data frame
+		return this->dataFrame;
+
 	} else {
 		// Timeout. Nothing received.
-		return 0;
+		return NULL;
 	}
 }

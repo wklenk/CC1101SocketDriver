@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 
 #include "SocketServer.hpp"
+#include "DataFrame.hpp"
 
 static const char* ERROR_LINE_TOO_LONG = "ERROR: Line too long.\n";
 
@@ -82,19 +83,36 @@ void SocketServer::acceptConnection()
 		exit(1);
 	}
 
-	uint8_t rxbuffer[64];
-
 	for (;;) {
-		int bytesRead = device->blockingRead(rxbuffer, 60000);
-		if (bytesRead > 0) {
+		DataFrame* dataFrame = device->blockingRead(60000);
+		if (dataFrame != NULL) {
 			char line[80];
-			for (int i = 0; i<bytesRead; i++) {
+
+			snprintf(line, 80, "Status: 0x%.2X\n", dataFrame->status);
+			write(newsockfd, line, strlen(line));
+
+			snprintf(line, 80, "Length: %d\n", dataFrame->len);
+			write(newsockfd, line, strlen(line));
+
+			snprintf(line, 80, "Source address: %d\n", dataFrame->srcAddress);
+			write(newsockfd, line, strlen(line));
+
+			snprintf(line, 80, "Destination address: %d\n", dataFrame->destAddress);
+			write(newsockfd, line, strlen(line));
+
+			snprintf(line, 80, "RSSI: %d\n", dataFrame->rssi);
+			write(newsockfd, line, strlen(line));
+
+			snprintf(line, 80, "LQI: %d\n", dataFrame->lqi);
+			write(newsockfd, line, strlen(line));
+
+			for (int i = 0; i<dataFrame->len; i++) {
 				if (!(i % 8)) {
 					sprintf(line, "\n");
 					write(newsockfd, line, strlen(line));
 				}
 
-				sprintf(line, "%.2X ", rxbuffer[i]);
+				sprintf(line, "%.2X ", dataFrame->buffer[i]);
 				write(newsockfd, line, strlen(line));
 			}
 			sprintf(line, "\n");
