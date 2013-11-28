@@ -36,24 +36,52 @@ static const char* EDGE_FALLING = "falling";
 static const char* EDGE_BOTH = "both";
 
 /**
- * Provides methods for dealing with a GPIO pin acting as input.
- * This pin is used to signal that incoming data is available in
- * the CC1101's RX FIFO buffer.
+ * Represents a GPIO pin,
+ * using the sysfs userspace interface provided by the kernel.
+ * 
+ * See https://www.kernel.org/doc/Documentation/gpio.txt for details.
  */
 class Gpio {
 private:
+	/** Name of the GPIO pin */
 	const char* pin;
 
 public:
 	Gpio(const char* pin);
 	~Gpio();
 
+	/**
+	 * Ask the kernel to export control of this GPIO pin to userspace.
+	 */
 	void exportPin();
+	
+	/**
+	 * Reverses the effect of exporting control of this GPIO pin to userspace.
+	 */
 	void unexportPin();
+	
+	/**
+	 * Define the direction of the GPIO pin: "in" or "out".
+	 */
 	void setPinDirection(const char* direction);
+	
+	/**
+	 * Define the GPIO pin to generate interrupts on changes of its value.
+	 * Possible values are "none", "rising", "falling" or "both".
+	 */
 	void setPinEdge(const char* edge);
 
+	/**
+	 * Get the current value of the GPIO pin.
+	 */
 	void getPinValue(void* value, size_t nbytes);
+	
+	/**
+	 * If the GPIO pin was configured to generate interrupts (see the
+	 * description of "edge"), you can use this method to wait for the edge
+	 * condition to happen. If 0 is returned, the edge condition did not
+	 * happen within the specified timeout.
+	 */
 	int waitForPinValueChange(int timeout_millis);
 };
 
