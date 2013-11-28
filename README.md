@@ -1,3 +1,6 @@
+This software is Alpha-State, still under development and not of practical use at the moment.
+---------------------------------------------------------------------------------------------
+
 CC1101SocketDriver
 ==================
 
