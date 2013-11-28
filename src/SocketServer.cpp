@@ -30,14 +30,10 @@
 
 static const char* ERROR_LINE_TOO_LONG = "ERROR: Line too long.\n";
 
-void error(const char *msg) {
-	perror(msg);
-	exit(1);
-}
 
 SocketServer::SocketServer(Device* device) {
 	this->device = device;
-	this->sockfd = 0;
+	this->sockfd = -1;
 }
 
 
@@ -49,8 +45,11 @@ void SocketServer::open(int portno)
 	struct sockaddr_in serv_addr;
 
 	this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
-		error("ERROR opening socket");
+	if (sockfd < 0) {
+		perror("Opening server socket");
+		exit(1);
+	}
+	
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET;
@@ -58,10 +57,15 @@ void SocketServer::open(int portno)
 	serv_addr.sin_port = htons(portno);
 
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-		error("ERROR on binding");
+		perror("Binding server socket");
+		exit(1);
 	}
 
-	listen(this->sockfd, 1); // Allowing a queue of up to 1 pending connection.
+	// Allowing a queue of up to 1 pending connection.
+	if (listen(this->sockfd, 1) < 0 ) {
+		perror("Setup server socket connection queue");
+		exit(1);
+	}; 
 }
 
 void SocketServer::acceptConnection()
@@ -73,8 +77,10 @@ void SocketServer::acceptConnection()
 	clilen = sizeof(cli_addr);
 
 	newsockfd = accept(this->sockfd, (struct sockaddr *) &cli_addr, &clilen);
-	if (newsockfd < 0)
-		error("ERROR on accept");
+	if (newsockfd < 0) {
+		perror("Accepting connection");
+		exit(1);
+	}
 
 	uint8_t rxbuffer[64];
 
@@ -128,7 +134,10 @@ void SocketServer::acceptConnection()
 	}
 	 */
 
-	close(newsockfd);
+	if (close(newsockfd) < 0) {
+		perror("Closing new socket");
+		exit(1);
+	}
 }
 
 /**
@@ -137,7 +146,10 @@ void SocketServer::acceptConnection()
 void SocketServer::closeConnection()
 {
 	if (close(this->sockfd) < 0) {
-		error("Error closing socket.");
+		perror("Closing server socket");
+		exit(1);
 	}
+	
+	this->sockfd = -1;
 }
 
