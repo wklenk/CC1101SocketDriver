@@ -37,24 +37,27 @@ void Device::configureRegisters(RegConfiguration* configuration) {
 	this->spi->writeBurst(0x00, configuration->getValues(), 0x2E);
 }
 
-DataFrame* Device::blockingRead(int timeoutMillis) {
+int Device::blockingRead(int otherFd, int timeoutMillis) {
 
 	spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
 	spi->readStrobe(STROBE_SRX);  // Enable RX mode
 
-	if (gpio->waitForPinValueChange(timeoutMillis) != 0) {
+	int rc = gpio->waitForPinValueChange(timeoutMillis, otherFd);
+	if ( rc > 0) {
 		// GPIO input pin raised -> data available
 
 		if (this->dataFrame->receive() < 0) {
 			// CRC error
-			return NULL;
+			return 0; // TODO: Really same as timeout?
 		}
 
-		// Return the data frame
-		return this->dataFrame;
+		return rc;
 
-	} else {
+	} else if (rc == 0) {
 		// Timeout. Nothing received.
-		return NULL;
+		return rc;
+	} else {
+		// Something wrong with otherFd
+		return rc;
 	}
 }

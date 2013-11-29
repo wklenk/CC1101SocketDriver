@@ -49,7 +49,14 @@ public:
 	uint8_t srcAddress;
 	uint8_t destAddress;
 
+	/** Received Signal Strength Indicator (given in dBm) */
 	int rssi;
+
+	/**
+	 * Link Quality Indicator. LQI is best used as a relative measurement
+	 * of the link quality (a low value indicates a better link than what a
+	 * high value does), since the value is dependent on the modulation format.
+	 */
 	uint8_t lqi;
 
 	DataFrame(Spi* spi);

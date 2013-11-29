@@ -28,6 +28,13 @@
 
 #include "Gpio.hpp"
 
+const char* Gpio::DIRECTION_IN = "in";
+const char* Gpio::DIRECTION_OUT = "out";
+
+const char* Gpio::EDGE_NONE = "none";
+const char* Gpio::EDGE_RISING = "rising";
+const char* Gpio::EDGE_FALLING = "falling";
+const char* Gpio::EDGE_BOTH = "both";
 
 Gpio::Gpio(const char* pin) {
 	this->pin = pin;
@@ -49,7 +56,7 @@ void Gpio::exportPin() {
 		exit(1);
 	}
 
-	int rc = write(fd, this->pin, strlen(this->pin));
+	size_t rc = write(fd, this->pin, strlen(this->pin));
 	if(rc != strlen(pin)) {
 		perror("write export");
 		exit(1);
@@ -70,7 +77,7 @@ void Gpio::unexportPin() {
 		exit(1);
 	}
 
-	int rc = write(fd, this->pin, strlen(this->pin));
+	size_t rc = write(fd, this->pin, strlen(this->pin));
 	if(rc != strlen(pin)) {
 		perror("write unexport");
 		exit(1);
@@ -97,7 +104,7 @@ void Gpio::setPinDirection(const char* direction) {
 		exit(1);
 	}
 
-	int rc = write(fd, direction, strlen(direction));
+	size_t rc = write(fd, direction, strlen(direction));
 	if(rc != strlen(direction)) {
 		perror("write direction");
 		exit(1);
@@ -122,7 +129,7 @@ void Gpio::setPinEdge(const char* edge) {
 		exit(1);
 	}
 
-	int rc = write(fd, edge, strlen(edge));
+	size_t rc = write(fd, edge, strlen(edge));
 	if(rc != strlen(edge)) {
 		perror("write edge");
 		exit(1);
@@ -174,7 +181,7 @@ void Gpio::getPinValue(void* value, size_t nbytes) {
  * Method will return with 0 if edge condition did not happen within the
  * specified timeout.
  */
-int Gpio::waitForPinValueChange(int timout_millis) {
+int Gpio::waitForPinValueChange(int timout_millis, int otherFd) {
 
 	const int BUFSIZE = 64;
 	char fn[BUFSIZE];
@@ -193,18 +200,36 @@ int Gpio::waitForPinValueChange(int timout_millis) {
 		exit(1);
 	}
 
-	struct pollfd pl;
-	pl.fd = fd;
-	pl.events = POLLPRI | POLLERR;
+	struct pollfd pl[2];
+	pl[0].fd = fd;
+	pl[0].events = POLLPRI | POLLERR; // TODO: Documentation says, POLLERR is implicit
 
-	rc = poll(&pl, 1, timout_millis);
+	pl[1].fd = otherFd;
+	pl[1].events = POLLIN | POLLERR;
+
+	printf("Entering poll\n");
+	rc = poll(pl, 2, timout_millis);
 	if(rc < 0) {
 		perror("poll");
 		exit(1);
 	}
+	printf("Leaving poll rc: %.2X\n", rc);
 
 	close(fd);
 
-	return pl.revents; // Will return 0 in case of timeout
+	printf("GPIO Pin events: %.2X\n", pl[0].revents);
+	printf("Other FD events: %.2X\n", pl[1].revents);
+
+	// Will return 0 in case of timeout
+	if (rc == 0) {
+		return 0; // Timeout
+	}
+
+	if (pl[1].revents > 0) {
+		// Data ready to read from the socket or socket was closed.
+		return -1;
+	}
+
+	return 1; // Data available in RX FIFO
 }
 

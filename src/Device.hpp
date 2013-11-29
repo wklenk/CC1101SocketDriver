@@ -31,15 +31,16 @@
 class Device {
 	Spi* spi;
 	Gpio* gpio;
-	DataFrame* dataFrame;
 
 public:
+	DataFrame* dataFrame;
+
 	Device(Spi* spi, Gpio* gpio, DataFrame* dataFrame);
 
 	void reset();
 	void configureRegisters(RegConfiguration* configuration);
 
-	DataFrame* blockingRead(int timeoutMillis);
+	int blockingRead(int otherFD, int timeoutMillis);
 };
 
 #endif /* DEVICE_HPP_ */

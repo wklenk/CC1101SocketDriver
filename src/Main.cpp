@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
 	gpio.unexportPin();
 	sleep(1);
 	gpio.exportPin();
-	gpio.setPinDirection(DIRECTION_IN);
-	gpio.setPinEdge(EDGE_RISING);
+	gpio.setPinDirection(Gpio::DIRECTION_IN);
+	gpio.setPinEdge(Gpio::EDGE_RISING);
 
 	DataFrame dataFrame(&spi);
 

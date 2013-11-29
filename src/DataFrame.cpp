@@ -21,8 +21,19 @@
 
 #include "AddressSpace.hpp"
 
+static const int RSSI_OFFSET = 74;
+
 DataFrame::DataFrame(Spi* spi) {
 	this->spi = spi;
+
+	this->status = 0x00;
+
+	this->len = 0;
+	this->srcAddress = 0;
+	this->destAddress = 0;
+
+	this->rssi = 0;
+	this->lqi = 0;
 }
 
 /**
@@ -51,9 +62,9 @@ int DataFrame::receive() {
 
 	// RSSI is coded as 2's complement see section 17.3 RSSI of the CC101 datasheet
 	if (rssiEncoded >= 128) {
-		this->rssi = ((rssiEncoded - 256) >> 1) - 74;
+		this->rssi = ((rssiEncoded - 256) >> 1) - RSSI_OFFSET;
 	} else {
-		this->rssi = (rssiEncoded >> 1) - 74;
+		this->rssi = (rssiEncoded >> 1) - RSSI_OFFSET;
 	}
 
 	// Read Byte n+2: LQI (Link Quality Indicator)

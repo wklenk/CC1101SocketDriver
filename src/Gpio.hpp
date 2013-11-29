@@ -27,14 +27,6 @@
 #include <string.h>
 #include <fcntl.h>
 
-static const char* DIRECTION_IN = "in";
-static const char* DIRECTION_OUT = "out";
-
-static const char* EDGE_NONE = "none";
-static const char* EDGE_RISING = "rising";
-static const char* EDGE_FALLING = "falling";
-static const char* EDGE_BOTH = "both";
-
 /**
  * Represents a GPIO pin,
  * using the sysfs userspace interface provided by the kernel.
@@ -63,12 +55,18 @@ public:
 	/**
 	 * Define the direction of the GPIO pin: "in" or "out".
 	 */
+	static const char* DIRECTION_IN; // "in"
+	static const char* DIRECTION_OUT; // "out"
 	void setPinDirection(const char* direction);
 	
 	/**
 	 * Define the GPIO pin to generate interrupts on changes of its value.
 	 * Possible values are "none", "rising", "falling" or "both".
 	 */
+	static const char* EDGE_NONE; // "none";
+	static const char* EDGE_RISING; // "rising";
+	static const char* EDGE_FALLING; // "falling";
+	static const char* EDGE_BOTH; // "both";
 	void setPinEdge(const char* edge);
 
 	/**
@@ -82,7 +80,7 @@ public:
 	 * condition to happen. If 0 is returned, the edge condition did not
 	 * happen within the specified timeout.
 	 */
-	int waitForPinValueChange(int timeout_millis);
+	int waitForPinValueChange(int timeout_millis, int otherFd);
 };
 
 

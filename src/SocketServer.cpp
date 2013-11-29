@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "SocketServer.hpp"
 #include "DataFrame.hpp"
@@ -83,44 +84,52 @@ void SocketServer::acceptConnection()
 		exit(1);
 	}
 
+	printf("Incoming connection from %s\n", inet_ntoa(cli_addr.sin_addr));
+
+	DataFrame* dataFrame;
+
 	for (;;) {
-		DataFrame* dataFrame = device->blockingRead(60000);
-		if (dataFrame != NULL) {
+
+		int rc = device->blockingRead(newsockfd, 60000);
+		if (rc > 0) {
 			char line[80];
 
-			snprintf(line, 80, "Status: 0x%.2X\n", dataFrame->status);
+			snprintf(line, 80, "Status: 0x%.2X\n", device->dataFrame->status);
 			write(newsockfd, line, strlen(line));
 
-			snprintf(line, 80, "Length: %d\n", dataFrame->len);
+			snprintf(line, 80, "Length: %d\n", device->dataFrame->len);
 			write(newsockfd, line, strlen(line));
 
-			snprintf(line, 80, "Source address: %d\n", dataFrame->srcAddress);
+			snprintf(line, 80, "Source address: %d\n", device->dataFrame->srcAddress);
 			write(newsockfd, line, strlen(line));
 
-			snprintf(line, 80, "Destination address: %d\n", dataFrame->destAddress);
+			snprintf(line, 80, "Destination address: %d\n", device->dataFrame->destAddress);
 			write(newsockfd, line, strlen(line));
 
-			snprintf(line, 80, "RSSI: %d\n", dataFrame->rssi);
+			snprintf(line, 80, "RSSI: %d dBm\n", device->dataFrame->rssi);
 			write(newsockfd, line, strlen(line));
 
-			snprintf(line, 80, "LQI: %d\n", dataFrame->lqi);
+			snprintf(line, 80, "LQI: %d\n", device->dataFrame->lqi);
 			write(newsockfd, line, strlen(line));
 
-			for (int i = 0; i<dataFrame->len; i++) {
+			for (int i = 0; i<device->dataFrame->len; i++) {
 				if (!(i % 8)) {
 					sprintf(line, "\n");
 					write(newsockfd, line, strlen(line));
 				}
 
-				sprintf(line, "%.2X ", dataFrame->buffer[i]);
+				sprintf(line, "%.2X ", device->dataFrame->buffer[i]);
 				write(newsockfd, line, strlen(line));
 			}
 			sprintf(line, "\n");
 			write(newsockfd, line, strlen(line));
 
-		} else {
+		} else if (rc == 0) {
 			const char* TIMEOUT = "Timeout\n";
 			write(newsockfd, TIMEOUT, strlen(TIMEOUT));
+		} else {
+			// Something wrong with socket FD
+			break; // Leave the loop
 		}
 	}
 
