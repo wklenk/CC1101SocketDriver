@@ -6,10 +6,14 @@ CC1101SocketDriver
 
 SPI Protocol Driver for TI CC1101 based RF communication modules.
 
-* For use on Raspberry Pi (Maybe also runs on other linux systems)
-* Applications use a TCP network socket to communicate with the RF communication module
-* Configurable "in-band" using "AT" commands
-* Radio packets and communication settings compatible to RFBee (Arduino RF module)
+This is the right place for you, if you ...
+
+* want to wire a CC1101 based communication module to a Raspberry Pi
+* want to write applications using a high-level programming language like Java or Python.
+* have some experience in using TCP network sockets in this programming language
+* want to talk to other CC1101 based devices like RFBee (Arduino)
+* want to build sensor networks
+* just want to play arround with RF communication
 
 Check out my blog at http://wolfgangklenk.wordpress.com
 
