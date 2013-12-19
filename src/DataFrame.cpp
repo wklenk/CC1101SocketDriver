@@ -17,11 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "DataFrame.hpp"
 
 #include "AddressSpace.hpp"
 
-static const int RSSI_OFFSET = 74;
+static const int DEFAULT_OUTPUT_FORMAT = 4; // I prefer hex output
 
 DataFrame::DataFrame(Spi* spi) {
 	this->spi = spi;
@@ -34,6 +38,8 @@ DataFrame::DataFrame(Spi* spi) {
 
 	this->rssi = 0;
 	this->lqi = 0;
+
+	this->outputFormat = DEFAULT_OUTPUT_FORMAT;
 }
 
 /**
@@ -57,15 +63,8 @@ int DataFrame::receive() {
 	this->spi->readBurst(ADDR_RXTX_FIFO, this->buffer, this->len);
 
 	// Read Byte n+1: RSSI (Received Signal Strength Indicator)
-	uint8_t rssiEncoded;
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, rssiEncoded);
+	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->rssi);
 
-	// RSSI is coded as 2's complement see section 17.3 RSSI of the CC101 datasheet
-	if (rssiEncoded >= 128) {
-		this->rssi = ((rssiEncoded - 256) >> 1) - RSSI_OFFSET;
-	} else {
-		this->rssi = (rssiEncoded >> 1) - RSSI_OFFSET;
-	}
 
 	// Read Byte n+2: LQI (Link Quality Indicator)
 	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->lqi);
@@ -84,4 +83,65 @@ int DataFrame::receive() {
 	return 0;
 }
 
+/**
+ * Writes the contents of this data frame to a file descriptor.
+ */
+void DataFrame::writeToSocket(int fd) {
 
+	const int MAXLEN = 256;
+	char line[MAXLEN];
+	char tmp[16];
+
+	int cnt = 0;
+
+	switch(this->outputFormat) {
+
+	case 0 :
+		// 0: Payload only
+		write(fd, (void*) this->buffer, (size_t) this->len);
+		break;
+
+	case 1 :
+		// 1: source, dest, payload
+		line[cnt++] = this->srcAddress;
+		line[cnt++] = this->destAddress;
+		memcpy(line + cnt, this->buffer, this->len); cnt += this->len;
+		write(fd, line, cnt);
+		break;
+
+	case 2 :
+		// 2: payload len, source, dest, payload, rssi, lqi
+		line[cnt++] = this->len;
+		line[cnt++] = this->srcAddress;
+		line[cnt++] = this->destAddress;
+		memcpy(line + cnt, this->buffer, this->len); cnt += this->len;
+		line[cnt++] = this->rssi;
+		line[cnt++] = this->lqi;
+		write(fd, line, cnt);
+		break;
+
+	case 3 :
+		//  3: payload len (DEC), source (DEC), dest (DEC), payload,",", rssi (DEC),",",lqi (DEC) NL
+		snprintf(line, 128, "%d,%d,%d,", this->len, this->srcAddress, this->destAddress);
+		cnt = strlen(line);
+		memcpy(line + cnt, this->buffer, this->len); cnt += this->len;
+		line[cnt++] = '\0';
+		snprintf(tmp, 16, ",%d,%d\n", this->rssi, this->lqi);
+		strcat(line, tmp);
+		write(fd, line, strlen(line));
+		break;
+
+	case 4:
+		//  payload len (HEX) source (HEX) dest (HEX) payload (HEX) rssi (HEX) lqi (HEX) NL
+		snprintf(line, 128, "%.2X %.2X %.2X ", this->len, this->srcAddress, this->destAddress);
+		for (int i = 0; i<this->len; i++) {
+			snprintf(tmp, 16, "%.2X", this->buffer[i]);
+			strcat(line, tmp);
+		}
+		snprintf(tmp, 16, " %.2X %.2X\n", this->rssi, this->lqi);
+		strcat(line, tmp);
+
+		write(fd, line, strlen(line));
+		break;
+	}
+}

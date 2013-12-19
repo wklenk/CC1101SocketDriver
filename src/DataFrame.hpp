@@ -49,8 +49,11 @@ public:
 	uint8_t srcAddress;
 	uint8_t destAddress;
 
-	/** Received Signal Strength Indicator (given in dBm) */
-	int rssi;
+	/** Received Signal Strength Indicator */
+	uint8_t rssi;
+
+	/** Format used to write data frame to the socket */
+	int outputFormat;
 
 	/**
 	 * Link Quality Indicator. LQI is best used as a relative measurement
@@ -62,6 +65,11 @@ public:
 	DataFrame(Spi* spi);
 
 	int receive();
+
+	/**
+	 * Writes the data frame to a file descriptor.
+	 */
+	void writeToSocket(int fd);
 };
 
 

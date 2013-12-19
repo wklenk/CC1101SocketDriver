@@ -30,14 +30,10 @@
 #include "SocketServer.hpp"
 #include "DataFrame.hpp"
 
-static const char* ERROR_LINE_TOO_LONG = "ERROR: Line too long.\n";
-
-
 SocketServer::SocketServer(Device* device) {
 	this->device = device;
 	this->sockfd = -1;
 }
-
 
 /**
  * Open the server socket.
@@ -51,7 +47,7 @@ void SocketServer::open(int portno)
 		perror("Opening server socket");
 		exit(1);
 	}
-	
+
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET;
@@ -86,43 +82,15 @@ void SocketServer::acceptConnection()
 
 	printf("Incoming connection from %s\n", inet_ntoa(cli_addr.sin_addr));
 
-	DataFrame* dataFrame;
-
 	for (;;) {
 
+		// We do a blocking read (waiting for incoming RF data), but this method
+		// also returns if there is incoming data from the socket.
 		int rc = device->blockingRead(newsockfd, 60000);
 		if (rc > 0) {
-			char line[80];
-
-			snprintf(line, 80, "Status: 0x%.2X\n", device->dataFrame->status);
-			write(newsockfd, line, strlen(line));
-
-			snprintf(line, 80, "Length: %d\n", device->dataFrame->len);
-			write(newsockfd, line, strlen(line));
-
-			snprintf(line, 80, "Source address: %d\n", device->dataFrame->srcAddress);
-			write(newsockfd, line, strlen(line));
-
-			snprintf(line, 80, "Destination address: %d\n", device->dataFrame->destAddress);
-			write(newsockfd, line, strlen(line));
-
-			snprintf(line, 80, "RSSI: %d dBm\n", device->dataFrame->rssi);
-			write(newsockfd, line, strlen(line));
-
-			snprintf(line, 80, "LQI: %d\n", device->dataFrame->lqi);
-			write(newsockfd, line, strlen(line));
-
-			for (int i = 0; i<device->dataFrame->len; i++) {
-				if (!(i % 8)) {
-					sprintf(line, "\n");
-					write(newsockfd, line, strlen(line));
-				}
-
-				sprintf(line, "%.2X ", device->dataFrame->buffer[i]);
-				write(newsockfd, line, strlen(line));
-			}
-			sprintf(line, "\n");
-			write(newsockfd, line, strlen(line));
+			// Write the data frame to the socket, using
+			// the selected output format.
+			device->dataFrame->writeToSocket(newsockfd);
 
 		} else if (rc == 0) {
 			const char* TIMEOUT = "Timeout\n";
@@ -132,34 +100,6 @@ void SocketServer::acceptConnection()
 			break; // Leave the loop
 		}
 	}
-
-
-	/*
-	const int MAX_LINE_LENGTH = 10; // TODO: Make larger
-	char line[MAX_LINE_LENGTH];
-	int i = 0;
-
-	char c;
-	while (read(newsockfd, &c, 1) > 0) {
-		if (c != '\n' && c != '\r') {
-			line[i++] = c;
-
-			if (i >= (MAX_LINE_LENGTH-1)) {
-				write(newsockfd, ERROR_LINE_TOO_LONG, strlen(ERROR_LINE_TOO_LONG));
-				break;
-			}
-		} else {
-			line[i++] = 0; // Terminate the string
-			write(newsockfd, line, i);
-
-			if (strncasecmp("quit", line, 4) == 0) {
-				break;
-			}
-
-			i = 0;
-		}
-	}
-	 */
 
 	if (close(newsockfd) < 0) {
 		perror("Closing new socket");
@@ -176,7 +116,7 @@ void SocketServer::closeConnection()
 		perror("Closing server socket");
 		exit(1);
 	}
-	
+
 	this->sockfd = -1;
 }
 

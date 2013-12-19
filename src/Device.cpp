@@ -57,7 +57,7 @@ int Device::blockingRead(int otherFd, int timeoutMillis) {
 		// Timeout. Nothing received.
 		return rc;
 	} else {
-		// Something wrong with otherFd
+		// Some event on other file descriptor (socket fd)
 		return rc;
 	}
 }

@@ -79,8 +79,8 @@ void Gpio::unexportPin() {
 
 	size_t rc = write(fd, this->pin, strlen(this->pin));
 	if(rc != strlen(pin)) {
-		perror("write unexport");
-		exit(1);
+		// perror("write unexport");
+		// exit(1);
 	}
 	
 	close(fd);
@@ -178,8 +178,10 @@ void Gpio::getPinValue(void* value, size_t nbytes) {
  * description of "edge"), you can use this method to wait for the edge
  * condition to happen.
  * 
- * Method will return with 0 if edge condition did not happen within the
- * specified timeout.
+ * Method returns
+ *  0 if nothing happened within the specified timeout.
+ *  1 if the PIN value changed.
+ * -1 if there was an event on the other file descriptor.
  */
 int Gpio::waitForPinValueChange(int timout_millis, int otherFd) {
 
