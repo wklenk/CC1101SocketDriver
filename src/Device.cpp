@@ -17,9 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Device.hpp"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "AddressSpace.hpp"
+#include "DateTime.hpp"
+
+#include "Device.hpp"
+
 
 Device::Device(Spi* spi, Gpio* gpio, DataFrame* dataFrame) {
 	this->spi = spi;
@@ -39,15 +45,24 @@ void Device::configureRegisters(RegConfiguration* configuration) {
 
 int Device::blockingRead(int otherFd, int timeoutMillis) {
 
+	assert(otherFd >= 0);
+
 	spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
 	spi->readStrobe(STROBE_SRX);  // Enable RX mode
+
+	DateTime::print();
+	printf("Wait for pin value change.\n");
 
 	int rc = gpio->waitForPinValueChange(timeoutMillis, otherFd);
 	if ( rc > 0) {
 		// GPIO input pin raised -> data available
-
+		assert(this->dataFrame != NULL);
 		if (this->dataFrame->receive() < 0) {
 			// CRC error
+
+			DateTime::print();
+			printf("Invalid incoming frame.\n");
+
 			return 0; // TODO: Really same as timeout?
 		}
 
@@ -55,9 +70,16 @@ int Device::blockingRead(int otherFd, int timeoutMillis) {
 
 	} else if (rc == 0) {
 		// Timeout. Nothing received.
+
+		DateTime::print();
+		printf("Timeout.\n");
 		return rc;
 	} else {
 		// Some event on other file descriptor (socket fd)
+
+		DateTime::print();
+		printf("Event on socket.\n");
+
 		return rc;
 	}
 }

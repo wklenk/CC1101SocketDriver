@@ -25,6 +25,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
+
+#include "DateTime.hpp"
 
 #include "Spi.hpp"
 
@@ -63,6 +66,14 @@ uint8_t Spi::readSingleByte(const uint8_t address, uint8_t& value) {
 
 	value = rx[1];
 
+	DateTime::print();
+	printf("read single byte status=0x%.2X value=0x%.2X\n", rx[0], value);
+
+	// CHIP_RDYn (Bit 7)
+	// Stays high until power and crystal have stabilized.
+	// Should always be low when using the SPI interface.
+	assert((rx[0] & 0x80) == 0);
+
 	return rx[0];
 }
 
@@ -87,6 +98,18 @@ uint8_t Spi::readBurst(const uint8_t address, uint8_t buffer[], const size_t nby
 
 	memcpy(buffer, rx+1, nbytes);
 
+	DateTime::print();
+	printf("read burst       status=0x%.2X value=", rx[0]);
+	for (int i=0 ; i<nbytes ; i++) {
+		printf("0x%.2X ", buffer[i]);
+	}
+	printf("\n");
+
+	// CHIP_RDYn (Bit 7)
+	// Stays high until power and crystal have stabilized.
+	// Should always be low when using the SPI interface.
+	assert((rx[0] & 0x80) == 0);
+
 	return rx[0];
 }
 
@@ -104,6 +127,8 @@ uint8_t Spi::readStrobe(const uint8_t address)
 
 	ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
 
+	DateTime::print();
+	printf("read strobe      status=0x%.2X\n", rx[0]);
 	return rx[0];
 }
 

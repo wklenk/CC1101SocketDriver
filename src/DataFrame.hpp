@@ -35,15 +35,18 @@
  * Byte 3 to Byte n: Payload
  * Byte n+1: RSSI (Received Signal Strength Indicator)
  * Byte n+2: LQI (Link Quality Indicator)
+ *
+ * Payload is limited to 255 bytes.
  */
 class DataFrame {
 private:
 	Spi *spi;
 
 public:
-	uint8_t status;
 
-	uint8_t buffer[64];
+	static const int MAX_PAYLOAD_BYTES = 256;
+
+	uint8_t buffer[MAX_PAYLOAD_BYTES];
 	uint8_t len;
 
 	uint8_t srcAddress;

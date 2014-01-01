@@ -26,7 +26,10 @@
 #include <poll.h>
 #include <unistd.h>
 
+#include "DateTime.hpp"
+
 #include "Gpio.hpp"
+
 
 const char* Gpio::DIRECTION_IN = "in";
 const char* Gpio::DIRECTION_OUT = "out";
@@ -183,7 +186,7 @@ void Gpio::getPinValue(void* value, size_t nbytes) {
  *  1 if the PIN value changed.
  * -1 if there was an event on the other file descriptor.
  */
-int Gpio::waitForPinValueChange(int timout_millis, int otherFd) {
+int Gpio::waitForPinValueChange(int timeout_millis, int otherFd) {
 
 	const int BUFSIZE = 64;
 	char fn[BUFSIZE];
@@ -204,23 +207,24 @@ int Gpio::waitForPinValueChange(int timout_millis, int otherFd) {
 
 	struct pollfd pl[2];
 	pl[0].fd = fd;
-	pl[0].events = POLLPRI | POLLERR; // TODO: Documentation says, POLLERR is implicit
+	pl[0].events = POLLPRI | POLLERR;
 
 	pl[1].fd = otherFd;
 	pl[1].events = POLLIN | POLLERR;
 
-	printf("Entering poll\n");
-	rc = poll(pl, 2, timout_millis);
+	DateTime::print();
+	printf("Polling (timeout=%d ms)\n", timeout_millis);
+	rc = poll(pl, 2, timeout_millis);
 	if(rc < 0) {
 		perror("poll");
 		exit(1);
 	}
-	printf("Leaving poll rc: %.2X\n", rc);
 
 	close(fd);
 
-	printf("GPIO Pin events: %.2X\n", pl[0].revents);
-	printf("Other FD events: %.2X\n", pl[1].revents);
+	DateTime::print();
+	printf("rc=0x%.2X  pl[0].revents=0x%.2X  pl[1].revents=0x%.2X\n",
+			rc, pl[0].revents, pl[1].revents);
 
 	// Will return 0 in case of timeout
 	if (rc == 0) {

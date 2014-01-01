@@ -29,6 +29,7 @@
 
 #include "SocketServer.hpp"
 #include "DataFrame.hpp"
+#include "DateTime.hpp"
 
 SocketServer::SocketServer(Device* device) {
 	this->device = device;
@@ -80,6 +81,7 @@ void SocketServer::acceptConnection()
 		exit(1);
 	}
 
+	DateTime::print();
 	printf("Incoming connection from %s\n", inet_ntoa(cli_addr.sin_addr));
 
 	for (;;) {

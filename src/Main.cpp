@@ -25,9 +25,11 @@
 #include "Device.hpp"
 #include "Gpio.hpp"
 #include "DataFrame.hpp"
+#include "DateTime.hpp"
 #include "RegConfigurationHR80.hpp"
 #include "RegConfigurationProfile0_27MHz.hpp"
 
+const int PORT = 50000;
 
 int main(int argc, char** argv) {
 
@@ -53,11 +55,12 @@ int main(int argc, char** argv) {
 
 	SocketServer serverSocket(&device);
 
-	serverSocket.open(50000);
+	serverSocket.open(PORT);
 
 	while (true)
 	{
-		puts("Accepting...\n");
+		DateTime::print();
+		printf("Accepting incoming connections on port %d ...\n", PORT);
 		serverSocket.acceptConnection();
 	}
 
@@ -65,6 +68,4 @@ int main(int argc, char** argv) {
 
 	return EXIT_SUCCESS;
 }
-
-
 
