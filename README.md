@@ -1,5 +1,6 @@
-This software is Alpha-State, still under development and not of practical use at the moment.
----------------------------------------------------------------------------------------------
+This software is Alpha-State, still under development and of limited use at the moment.
+---------------------------------------------------------------------------------------
+* Update 2014-01-01: Able to receive up to 60 byte payloads from RFBee and output on a TCP socket.
 
 CC1101SocketDriver
 ==================
