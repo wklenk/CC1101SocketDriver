@@ -17,21 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADRESSSPACE_HPP_
-#define ADRESSSPACE_HPP_
+#ifndef CC1101TRANSCEIVER_HPP_
+#define CC1101TRANSCEIVER_HPP_
 
-#include <stdint.h>
+#include "Spi.hpp"
+#include "Gpio.hpp"
 
-static const uint8_t ADDR_TX_BYTES  = 0x3A;
-static const uint8_t ADDR_RX_BYTES  = 0x3B;
-static const uint8_t ADDR_RXTX_FIFO = 0x3F;
+class CC1101Transceiver {
 
-static const uint8_t STROBE_SRES = 0x30; // Reset chip.
-static const uint8_t STROBE_SRX  = 0x34; // Enable RX.
-static const uint8_t STROBE_STX  = 0x35; // Enable TX.
-static const uint8_t STROBE_SFRX = 0x3A; // Flush the RX FIFO buffer.
-static const uint8_t STROBE_SFTX = 0x3B; // Flush the TX FIFO buffer.
-static const uint8_t STROBE_SNOP = 0x3D; // No operation
+private:
+	Spi* spi;
+	Gpio* gpio;
 
+public:
+	CC1101Transceiver(Spi* spi, Gpio* gpio);
 
-#endif /* ADRESSSPACE_HPP_ */
+	int receive(uint8_t buffer[], size_t& nbytes);
+	int transmit(const uint8_t buffer[], size_t nbytes);
+};
+
+#endif /* CC1101TRANSCEIVER_HPP_ */

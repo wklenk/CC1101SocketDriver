@@ -30,8 +30,8 @@
 
 static const int DEFAULT_OUTPUT_FORMAT = 4; // I prefer hex output
 
-DataFrame::DataFrame(Spi* spi) {
-	this->spi = spi;
+DataFrame::DataFrame(CC1101Transceiver* transceiver) {
+	this->transceiver = transceiver;
 
 	this->len = 0;
 	this->srcAddress = 0;
@@ -54,65 +54,46 @@ DataFrame::DataFrame(Spi* spi) {
  * Returns -1 on error.
  */
 int DataFrame::receive() {
-	assert(this->spi != NULL);
 
-	uint8_t status;
+	uint8_t tmp[MAX_PAYLOAD_BYTES + 4];
+	size_t nbytes;
 
-	// Read Byte 0: Number of following bytes (n).
-	status = this->spi->readSingleByte(ADDR_RXTX_FIFO, this->len);
+	int rc = this->transceiver->receive(tmp, nbytes);
 
-	// Plausibility check: Number of bytes available in the RX FIFO has to be
-	// at least greater as number of bytes received in the first byte
-	// of the frame
-	if ((status & 0x0F) != 0x0F) {
-		if(! (status & 0x0F) >= this->len) {
-			return -1;
+	DateTime::print();
+	printf("rc=%d nbytes=%d\n", rc, nbytes);
+
+	if (rc >= 0) {
+		int cnt = 0;
+		this->destAddress = tmp[cnt++];
+		this->srcAddress = tmp[cnt++];
+
+		size_t payloadLength = nbytes - 4; // dstAddress, srcAddress, RSSI, LQI
+		memcpy(this->buffer, tmp + cnt, payloadLength);
+		cnt += payloadLength;
+		this->len = payloadLength;
+
+		this->rssi = tmp[cnt++];
+		this->lqi = tmp[cnt++];
+
+		assert(nbytes == cnt);
+
+		// Checksum OK?
+		if ((this->lqi & 0x80) == 0) {
+			return -1; // CRC error in received data
 		}
+
+		this->lqi = this->lqi & 0x7F; // Strip off the CRC bit
 	}
 
-	// Read Byte 1: Destination address
-	status = this->spi->readSingleByte(ADDR_RXTX_FIFO, this->destAddress);
-	if(! (status & 0x0F) > 0) {
-		return -1;
-	}
+	return 0;
+}
 
-	// Read Byte 2: Source address
-	status = this->spi->readSingleByte(ADDR_RXTX_FIFO, this->srcAddress);
-	if(! (status & 0x0F) > 0) {
-		return -1;
-	}
-
-	// Read Byte 3 to Byte n: Payload
-	this->len -= 2; // Subtract the 2 address bytes
-
-	// Plausibility check: At least this->len bytes have to be available
-	// in the RX FIFO at this point in time
-	if ((status & 0x0F) != 0x0F) {
-		if(! (status & 0x0F) >= this->len) {
-			return -1;
-		}
-	}
-
-	assert(MAX_PAYLOAD_BYTES >= this->len);
-	status = this->spi->readBurst(ADDR_RXTX_FIFO, this->buffer, this->len);
-	if(! (status & 0x0F) > 0) {
-		return -1;
-	}
-
-	// Read Byte n+1: RSSI (Received Signal Strength Indicator)
-	status = this->spi->readSingleByte(ADDR_RXTX_FIFO, this->rssi);
-	if(! (status & 0x0F) > 0) {
-		return -1;
-	}
-
-	// Read Byte n+2: LQI (Link Quality Indicator)
-	this->spi->readSingleByte(ADDR_RXTX_FIFO, this->lqi);
-	// Checksum OK?
-	if ((this->lqi & 0x80) == 0) {
-		return -1; // CRC error in received data
-	}
-
-	this->lqi = this->lqi & 0x7F; // Strip off the CRC bit
+/**
+ * Writes the frame into the TX FIFO and makes the CC1101 transmit
+ * the data by sending a STX strobe command.
+ */
+int DataFrame::transmit() {
 
 	return 0;
 }

@@ -81,6 +81,9 @@ public:
 	 * happen within the specified timeout.
 	 */
 	int waitForPinValueChange(int timeout_millis, int otherFd);
+
+
+	int waitForPinValueChange(int timeout_millis, const char* edge);
 };
 
 

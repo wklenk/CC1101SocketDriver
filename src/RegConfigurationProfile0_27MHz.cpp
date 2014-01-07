@@ -23,7 +23,7 @@ const uint8_t RegConfigurationProfile0_27MHz::register_configuration[] = {
 		0x01,  // IOCFG2              GDO2 Output Pin Configuration
 		0x2E,  // IOCFG1              GDO1 Output Pin Configuration
 		0x2E,  // IOCFG0              GDO0 Output Pin Configuration
-		0x4E,  // FIFOTHR             RX FIFO and TX FIFO Thresholds
+		0x00, // TODO: Seems better than 0x4E,  // FIFOTHR             RX FIFO and TX FIFO Thresholds
 		0xD3,  // SYNC1               Sync Word, High Byte
 		0x91,  // SYNC0               Sync Word, Low Byte
 		0xFF,  // PKTLEN              Packet Length

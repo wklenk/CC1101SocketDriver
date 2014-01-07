@@ -26,6 +26,7 @@
 #include "Gpio.hpp"
 #include "DataFrame.hpp"
 #include "DateTime.hpp"
+#include "CC1101Transceiver.hpp"
 #include "RegConfigurationHR80.hpp"
 #include "RegConfigurationProfile0_27MHz.hpp"
 
@@ -42,10 +43,10 @@ int main(int argc, char** argv) {
 	sleep(1);
 	gpio.exportPin();
 	gpio.setPinDirection(Gpio::DIRECTION_IN);
-	gpio.setPinEdge(Gpio::EDGE_RISING);
 
-	DataFrame dataFrame(&spi);
+	CC1101Transceiver transceiver(&spi, &gpio);
 
+	DataFrame dataFrame(&transceiver);
 
 	// Set up the RF module
 	Device device(&spi, &gpio, &dataFrame);

@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "Spi.hpp"
+#include "CC1101Transceiver.hpp"
 
 /**
  * Decodes/Encodes the data in frames identical to the RFBee firmware.
@@ -40,7 +40,7 @@
  */
 class DataFrame {
 private:
-	Spi *spi;
+	CC1101Transceiver* transceiver;
 
 public:
 
@@ -65,9 +65,11 @@ public:
 	 */
 	uint8_t lqi;
 
-	DataFrame(Spi* spi);
+	DataFrame(CC1101Transceiver* transceiver);
 
 	int receive();
+	int transmit();
+
 
 	/**
 	 * Writes the data frame to a file descriptor.

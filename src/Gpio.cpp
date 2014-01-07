@@ -188,6 +188,8 @@ void Gpio::getPinValue(void* value, size_t nbytes) {
  */
 int Gpio::waitForPinValueChange(int timeout_millis, int otherFd) {
 
+	setPinEdge(Gpio::EDGE_RISING);
+
 	const int BUFSIZE = 64;
 	char fn[BUFSIZE];
 	snprintf(fn, BUFSIZE, "/sys/class/gpio/gpio%s/value", this->pin);
@@ -222,9 +224,11 @@ int Gpio::waitForPinValueChange(int timeout_millis, int otherFd) {
 
 	close(fd);
 
+	/*
 	DateTime::print();
 	printf("rc=0x%.2X  pl[0].revents=0x%.2X  pl[1].revents=0x%.2X\n",
 			rc, pl[0].revents, pl[1].revents);
+	*/
 
 	// Will return 0 in case of timeout
 	if (rc == 0) {
@@ -239,3 +243,41 @@ int Gpio::waitForPinValueChange(int timeout_millis, int otherFd) {
 	return 1; // Data available in RX FIFO
 }
 
+/**
+ * Returns 0 on timeout, 1 on pin value change.
+ */
+int Gpio::waitForPinValueChange(int timeout_millis, const char* edge) {
+
+	setPinEdge(edge);
+
+	const int BUFSIZE = 64;
+	char fn[BUFSIZE];
+	snprintf(fn, BUFSIZE, "/sys/class/gpio/gpio%s/value", this->pin);
+	int fd = open(fn, O_RDONLY);
+	if(fd < 0)  {
+		perror(fn);
+		exit(1);
+	}
+
+	// Dummy read to clear the interrupt.
+	uint8_t c;
+	int rc = read (fd, &c, 1);
+	if (rc < 0) {
+		perror("read");
+		exit(1);
+	}
+
+	struct pollfd pl[1];
+	pl[0].fd = fd;
+	pl[0].events = POLLPRI | POLLERR;
+
+	rc = poll(pl, 1, timeout_millis);
+	if(rc < 0) {
+		perror("poll");
+		exit(1);
+	}
+
+	close(fd);
+
+	return rc;
+}
