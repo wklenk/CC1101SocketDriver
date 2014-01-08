@@ -27,7 +27,7 @@
 #include "Device.hpp"
 
 
-Device::Device(Spi* spi, Gpio* gpio, DataFrame* dataFrame) {
+Device::Device(Spi* spi, Gpio* gpio, RFBeeDataFrame* dataFrame) {
 	this->spi = spi;
 	this->gpio = gpio;
 	this->dataFrame = dataFrame;
@@ -47,39 +47,36 @@ int Device::blockingRead(int otherFd, int timeoutMillis) {
 
 	assert(otherFd >= 0);
 
-	spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
-	spi->readStrobe(STROBE_SRX);  // Enable RX mode
+	while(true) {
+		spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
+		spi->readStrobe(STROBE_SRX);  // Enable RX mode
 
-	DateTime::print();
-	printf("Wait for pin value change.\n");
+		DateTime::print();
+		printf("Waiting for incoming data ...\n");
 
-	int rc = gpio->waitForPinValueChange(timeoutMillis, otherFd);
-	if ( rc > 0) {
-		// GPIO input pin raised -> data available
-		assert(this->dataFrame != NULL);
-		if (this->dataFrame->receive() < 0) {
-			// CRC error
+		int rc = gpio->waitForPinValueChange(timeoutMillis, otherFd);
+		if ( rc > 0) {
+			// GPIO input pin raised -> data available
+			assert(this->dataFrame != NULL);
+			if (this->dataFrame->receive() < 0) {
+				// CRC error
+				// Try to read the next incoming message.
+			} else {
+				return rc;
+			}
+		} else if (rc == 0) {
+			// Timeout. Nothing received.
 
 			DateTime::print();
-			printf("Invalid incoming frame.\n");
+			printf("Timeout.\n");
+			return rc;
+		} else {
+			// Some event on other file descriptor (socket fd)
 
-			return 0; // TODO: Really same as timeout?
+			DateTime::print();
+			printf("Event on socket.\n");
+
+			return rc;
 		}
-
-		return rc;
-
-	} else if (rc == 0) {
-		// Timeout. Nothing received.
-
-		DateTime::print();
-		printf("Timeout.\n");
-		return rc;
-	} else {
-		// Some event on other file descriptor (socket fd)
-
-		DateTime::print();
-		printf("Event on socket.\n");
-
-		return rc;
 	}
 }

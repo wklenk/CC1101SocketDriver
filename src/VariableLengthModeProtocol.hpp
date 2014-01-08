@@ -17,23 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CC1101TRANSCEIVER_HPP_
-#define CC1101TRANSCEIVER_HPP_
+#ifndef VARIABLELENGTHMODEPROTOCOL_HPP_
+#define VARIABLELENGTHMODEPROTOCOL_HPP_
 
 #include "Spi.hpp"
 #include "Gpio.hpp"
+#include "Protocol.hpp"
 
-class CC1101Transceiver {
+/**
+ * Uses the CC1101 "Variable Length Mode" to receive and transmit
+ * messages up to 255 bytes.
+ *
+ * The first byte of the message is used as length indicator.
+ */
+class VariableLengthModeProtocol : public Protocol {
 
 private:
 	Spi* spi;
 	Gpio* gpio;
 
 public:
-	CC1101Transceiver(Spi* spi, Gpio* gpio);
+	VariableLengthModeProtocol(Spi* spi, Gpio* gpio);
 
 	int receive(uint8_t buffer[], size_t& nbytes);
 	int transmit(const uint8_t buffer[], size_t nbytes);
 };
 
-#endif /* CC1101TRANSCEIVER_HPP_ */
+#endif /* VARIABLELENGTHMODEPROTOCOL_HPP_ */

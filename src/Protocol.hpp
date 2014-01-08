@@ -17,30 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEVICE_HPP_
-#define DEVICE_HPP_
-
-#include "Spi.hpp"
-#include "Gpio.hpp"
-#include "RegConfiguration.hpp"
-#include "RFBeeDataFrame.hpp"
+#ifndef PROTOCOL_HPP_
+#define PROTOCOL_HPP_
 
 /**
- * Represents a CC1101 based RF communication module.
+ * A protocol is used to receive or transmit a message.
  */
-class Device {
-	Spi* spi;
-	Gpio* gpio;
+class Protocol {
 
 public:
-	RFBeeDataFrame* dataFrame;
+	virtual ~Protocol() {};
 
-	Device(Spi* spi, Gpio* gpio, RFBeeDataFrame* dataFrame);
-
-	void reset();
-	void configureRegisters(RegConfiguration* configuration);
-
-	int blockingRead(int otherFD, int timeoutMillis);
+	virtual int receive(uint8_t buffer[], size_t& nbytes) = 0;
+	virtual int transmit(const uint8_t buffer[], size_t nbytes) = 0;
 };
 
-#endif /* DEVICE_HPP_ */
+
+#endif /* PROTOCOL_HPP_ */

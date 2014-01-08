@@ -25,12 +25,14 @@
 #include "AddressSpace.hpp"
 #include "DateTime.hpp"
 
-#include "CC1101Transceiver.hpp"
+#include "VariableLengthModeProtocol.hpp"
 
 const int FIFO_LENGTH = 64;
 uint8_t fifo[FIFO_LENGTH];
 
-CC1101Transceiver::CC1101Transceiver(Spi* spi, Gpio* gpio) {
+uint8_t t_rxbytes[FIFO_LENGTH];
+
+VariableLengthModeProtocol::VariableLengthModeProtocol(Spi* spi, Gpio* gpio) {
 	this->spi = spi;
 	this->gpio = gpio;
 }
@@ -41,84 +43,97 @@ CC1101Transceiver::CC1101Transceiver(Spi* spi, Gpio* gpio) {
  * data specifies the payload length. The payload length is limited to 255 bytes.
  *
  * The caller is responsible to provide a buffer that provides space for at
- * least 255 bytes.
+ * least 255(+2 bytes for RSSI and LQI) bytes.
  *
  * The code is kind of time critical: Don't add statements that cause
  * additional I/O operations (e.g. debug printf statements). Doing so may
  * lead to RX FIFO overflow.
  */
-int CC1101Transceiver::receive(uint8_t buffer[], size_t& nbytes) {
+int VariableLengthModeProtocol::receive(uint8_t buffer[], size_t& nbytes) {
+
+	int cnt = 0;
 
 	// When this method is entered, when RX FIFO is filled at or above
 	// the RX FIFO threshold or the end of packet is reached.
 	// See CC1101 configuration register IOCFG2 = 0x01
 
-	uint8_t rxBytes;
-	this->spi->readBurst(ADDR_RX_BYTES, &rxBytes, 1);
-
-	if ((rxBytes & 0x80) > 0) {
+	// Read the variable length byte from the RX FIFO
+	uint8_t variableLength;
+	uint8_t chipStatus = this->spi->readSingleByte(ADDR_RXTX_FIFO, variableLength);
+	if (variableLength == 0) {
 		DateTime::print();
-		printf("RX FIFO Overflow (rxbytes=0x%.2X)\n", rxBytes);
+		printf("RX FIFO received invalid variable length byte = 0x00.\n");
+
+		this->spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
 		return -1;
 	}
 
-	rxBytes &= 0x7f; // Clear RX FIFO Overflow bit
+	if ((chipStatus & 0x70) == 0x60) {
+		DateTime::print();
+		printf("RX FIFO Overflow when reading first byte. Flushing RX Buffer.\n");
 
-	assert(rxBytes > 0); // There should be some bytes to read
-	assert(rxBytes <= FIFO_LENGTH);
-	this->spi->readBurst(ADDR_RXTX_FIFO, fifo, rxBytes);
+		this->spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
+		return -1;
+	}
 
-	// CC1101 variable length mode: First byte after sync word holds the length
-	uint8_t variableLength = fifo[0];
-
-	// CC1101 receiver is configured to add RSSI byte and LQI byte at the end
-	// of the RX FIFO. This adds 2 more bytes to the RX FIFO.
+	// The CC1101 receiver adds 2 bytes at the end of the message:
+	// RSSI and LQI.
 	variableLength += 2;
 
+	uint8_t rxBytes;
 	uint8_t currentLength = 0;
-	assert(rxBytes > 1);
-	memcpy(buffer + currentLength, fifo + 1, rxBytes - 1);
-	currentLength += (rxBytes - 1);
+	do {
+		// Check how many bytes we can read from the RX FIFO
+		this->spi->readBurst(ADDR_RX_BYTES, &rxBytes, 1);
 
-	while (currentLength < variableLength) {
+		t_rxbytes[cnt++] = rxBytes; // Debug
 
-		// Poll if new data has arrived in the RX FIFO
-		int cntEmptyLoops = 10;
-		do {
-			this->spi->readBurst(ADDR_RX_BYTES, &rxBytes, 1);
+		if ((rxBytes & 0x80) > 0) {
+			DateTime::print();
+			printf("RX FIFO Overflow. Flushing RX Buffer. (rxbytes=0x%.2X)\n", rxBytes);
 
-			if ((rxBytes & 0x80) > 0) {
-				DateTime::print();
-				printf("RX FIFO Overflow (rxbytes=0x%.2X)\n", rxBytes);
-				return -1;
+			for (int i=0 ; i<cnt ; i++) {
+				printf("i=%d rxbytes=0x%.2X (0x%.2X) %d (%d)\n", i, t_rxbytes[i],  t_rxbytes[i] & 0x7F, t_rxbytes[i], t_rxbytes[i] & 0x7F);
 			}
 
-			rxBytes &= 0x7f; // Clear RX FIFO Overflow bit
+			this->spi->readStrobe(STROBE_SFRX); // Flush the RX FIFO
+			return -1;
+		}
 
-			if (rxBytes == 0) {
-				cntEmptyLoops--;
-
-				if (cntEmptyLoops < 0) {
-					DateTime::print();
-					printf("RX FIFO Receive Timeout (currentLength=%d variableLength=%d)\n", currentLength, variableLength);
-					return -1;
-				}
-			}
-
-		} while (rxBytes == 0);
+		rxBytes &= 0x7f; // Clear RX FIFO Overflow bit
 
 		assert(rxBytes > 0); // There should be some bytes to read
-		assert(rxBytes <= FIFO_LENGTH);
-		this->spi->readBurst(ADDR_RXTX_FIFO, fifo, rxBytes);
 
-		memcpy(buffer + currentLength, fifo, rxBytes);
-		currentLength += rxBytes;
-	}
+		// Sometimes, rxBytes may have a "buggy" value.
+		if (rxBytes > FIFO_LENGTH) {
+			// Just read again.
+			continue;
+		}
+
+		// In case this is the remaining part of the message, read all
+		// bytes from the RX FIFO. If not, keep a byte in the RX FIFO.
+		if ((currentLength + rxBytes) >= variableLength) {
+			this->spi->readBurst(ADDR_RXTX_FIFO, fifo, rxBytes);
+			memcpy(buffer + currentLength, fifo, rxBytes);
+			currentLength += rxBytes;
+		} else {
+			// Intentionally keep a byte in the RX FIFO
+			this->spi->readBurst(ADDR_RXTX_FIFO, fifo, rxBytes - 1);
+			memcpy(buffer + currentLength, fifo, rxBytes - 1);
+			currentLength += (rxBytes - 1);
+
+			usleep(2000); // Allow some time to fill the RX FIFO
+		}
+	} while (currentLength < variableLength);
 
 	nbytes = currentLength;
 
 	DateTime::print();
 	printf("Received message (variableLength=%d currentLength=%d)\n", variableLength, currentLength);
+
+	for (int i=0 ; i<cnt ; i++) {
+		printf("i=%d rxbytes=0x%.2X (0x%.2X) %d (%d)\n", i, t_rxbytes[i],  t_rxbytes[i] & 0x7F, t_rxbytes[i], t_rxbytes[i] & 0x7F);
+	}
 
 	return 0;
 }
@@ -128,7 +143,7 @@ int CC1101Transceiver::receive(uint8_t buffer[], size_t& nbytes) {
  * We use the "variable packet length mode", so the first byte specifies the
  * payload length. The payload length is limited to 255 bytes.
  */
-int CC1101Transceiver::transmit(const uint8_t buffer[], size_t nbytes) {
+int VariableLengthModeProtocol::transmit(const uint8_t buffer[], size_t nbytes) {
 
 	/*
 	assert(nbytes > 0);

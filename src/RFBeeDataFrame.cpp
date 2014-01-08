@@ -25,13 +25,30 @@
 #include "AddressSpace.hpp"
 #include "DateTime.hpp"
 
-#include "DataFrame.hpp"
+#include "RFBeeDataFrame.hpp"
 
 
 static const int DEFAULT_OUTPUT_FORMAT = 4; // I prefer hex output
 
-DataFrame::DataFrame(CC1101Transceiver* transceiver) {
-	this->transceiver = transceiver;
+/**
+ * Decodes the RSSI value added by the CC1101 receiver.
+ */
+static int RSSIDecode(uint8_t rssiEnc){
+	int rssi;
+
+	if (rssiEnc >= 128) {
+		rssi = (rssiEnc - 256) >> 1;
+	} else {
+		rssi = rssiEnc >> 1;
+	}
+
+	return rssi - 74;
+
+  return rssi;
+}
+
+RFBeeDataFrame::RFBeeDataFrame(Protocol* protocol) {
+	this->protocol = protocol;
 
 	this->len = 0;
 	this->srcAddress = 0;
@@ -53,18 +70,15 @@ DataFrame::DataFrame(CC1101Transceiver* transceiver) {
  * Returns 0 if a data frame could be read from the RX FIFO.
  * Returns -1 on error.
  */
-int DataFrame::receive() {
+int RFBeeDataFrame::receive() {
 
 	uint8_t tmp[MAX_PAYLOAD_BYTES + 4];
 	size_t nbytes;
 
-	int rc = this->transceiver->receive(tmp, nbytes);
-
-	DateTime::print();
-	printf("rc=%d nbytes=%d\n", rc, nbytes);
+	int rc = this->protocol->receive(tmp, nbytes);
 
 	if (rc >= 0) {
-		int cnt = 0;
+		size_t cnt = 0;
 		this->destAddress = tmp[cnt++];
 		this->srcAddress = tmp[cnt++];
 
@@ -76,10 +90,16 @@ int DataFrame::receive() {
 		this->rssi = tmp[cnt++];
 		this->lqi = tmp[cnt++];
 
+		DateTime::print();
+		printf("RFBeeDataFrame received (length=%d destAddress=0x%.2X srcAddress=0x%.2X RSSI=%ddBm LQI=0x%.2X)\n",
+				nbytes, this->destAddress, this->srcAddress, RSSIDecode(this->rssi), this->lqi);
+
 		assert(nbytes == cnt);
 
 		// Checksum OK?
 		if ((this->lqi & 0x80) == 0) {
+			DateTime::print();
+			printf("Receiver detected CRC error.\n");
 			return -1; // CRC error in received data
 		}
 
@@ -93,7 +113,7 @@ int DataFrame::receive() {
  * Writes the frame into the TX FIFO and makes the CC1101 transmit
  * the data by sending a STX strobe command.
  */
-int DataFrame::transmit() {
+int RFBeeDataFrame::transmit() {
 
 	return 0;
 }
@@ -101,7 +121,7 @@ int DataFrame::transmit() {
 /**
  * Writes the contents of this data frame to a file descriptor.
  */
-void DataFrame::writeToSocket(int fd) {
+void RFBeeDataFrame::writeToSocket(int fd) {
 
 	assert(fd >= 0);
 
@@ -170,3 +190,5 @@ void DataFrame::writeToSocket(int fd) {
 		break;
 	}
 }
+
+

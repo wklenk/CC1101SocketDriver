@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DATAFRAME_HPP_
-#define DATAFRAME_HPP_
+#ifndef RFBEEDATAFRAME_HPP_
+#define RFBEEDATAFRAME_HPP_
 
 #include <stdint.h>
 #include <stddef.h>
 
-#include "CC1101Transceiver.hpp"
+#include "Protocol.hpp"
 
 /**
  * Decodes/Encodes the data in frames identical to the RFBee firmware.
@@ -38,9 +38,9 @@
  *
  * Payload is limited to 255 bytes.
  */
-class DataFrame {
+class RFBeeDataFrame {
 private:
-	CC1101Transceiver* transceiver;
+	Protocol* protocol;
 
 public:
 
@@ -65,7 +65,7 @@ public:
 	 */
 	uint8_t lqi;
 
-	DataFrame(CC1101Transceiver* transceiver);
+	RFBeeDataFrame(Protocol* protocol);
 
 	int receive();
 	int transmit();
@@ -78,4 +78,4 @@ public:
 };
 
 
-#endif /* DATAFRAME_HPP_ */
+#endif /* RFBEEDATAFRAME_HPP__ */

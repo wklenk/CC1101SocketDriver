@@ -24,9 +24,10 @@
 #include "Spi.hpp"
 #include "Device.hpp"
 #include "Gpio.hpp"
-#include "DataFrame.hpp"
+#include "RFBeeDataFrame.hpp"
 #include "DateTime.hpp"
-#include "CC1101Transceiver.hpp"
+#include "VariableLengthModeProtocol.hpp"
+#include "Protocol.hpp"
 #include "RegConfigurationHR80.hpp"
 #include "RegConfigurationProfile0_27MHz.hpp"
 
@@ -44,9 +45,9 @@ int main(int argc, char** argv) {
 	gpio.exportPin();
 	gpio.setPinDirection(Gpio::DIRECTION_IN);
 
-	CC1101Transceiver transceiver(&spi, &gpio);
+	VariableLengthModeProtocol protocol(&spi, &gpio);
 
-	DataFrame dataFrame(&transceiver);
+	RFBeeDataFrame dataFrame(&protocol);
 
 	// Set up the RF module
 	Device device(&spi, &gpio, &dataFrame);

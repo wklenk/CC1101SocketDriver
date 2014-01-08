@@ -28,7 +28,7 @@
 #include <arpa/inet.h>
 
 #include "SocketServer.hpp"
-#include "DataFrame.hpp"
+#include "RFBeeDataFrame.hpp"
 #include "DateTime.hpp"
 
 SocketServer::SocketServer(Device* device) {
