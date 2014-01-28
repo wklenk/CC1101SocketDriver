@@ -25,6 +25,7 @@
 #include "Device.hpp"
 #include "Gpio.hpp"
 #include "RFBeeDataFrame.hpp"
+#include "RawDataFrame.hpp"
 #include "DateTime.hpp"
 #include "VariableLengthModeProtocol.hpp"
 #include "Protocol.hpp"
@@ -47,7 +48,9 @@ int main(int argc, char** argv) {
 
 	VariableLengthModeProtocol protocol(&spi, &gpio);
 
+	// Select a data frame format
 	RFBeeDataFrame dataFrame(&protocol);
+	//RawDataFrame dataFrame(&protocol);
 
 	// Set up the RF module
 	Device device(&spi, &gpio, &dataFrame);

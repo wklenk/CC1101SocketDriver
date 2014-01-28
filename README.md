@@ -1,5 +1,6 @@
 This software is Alpha-State, still under development and of limited use at the moment.
 ---------------------------------------------------------------------------------------
+* Update 2014-01-28: Added a RawDataFrame for unstructured data received (alternative to RFBeeDataFrame)
 * Update 2014-01-07: Should be able to receive up to 255 bytes now in CC1101 "variable length mode". Was only able to test it up to 184 bytes due to performance issues of the RFBee.
 * Update 2014-01-01: Able to receive up to 60 byte payloads from RFBee and output on a TCP socket.
 

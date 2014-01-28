@@ -47,8 +47,7 @@ static int RSSIDecode(uint8_t rssiEnc){
   return rssi;
 }
 
-RFBeeDataFrame::RFBeeDataFrame(Protocol* protocol) {
-	this->protocol = protocol;
+RFBeeDataFrame::RFBeeDataFrame(Protocol* protocol) : IDataFrame(protocol) {
 
 	this->len = 0;
 	this->srcAddress = 0;
@@ -125,11 +124,11 @@ void RFBeeDataFrame::writeToSocket(int fd) {
 
 	assert(fd >= 0);
 
-	const int MAX_LINE_LENGTH = 768; // Not exact, but should be enough
+	const size_t MAX_LINE_LENGTH = 768; // Not exact, but should be enough
 	char line[MAX_LINE_LENGTH];
 	char tmp[16];
 
-	int cnt = 0;
+	size_t cnt = 0;
 
 	switch(this->outputFormat) {
 

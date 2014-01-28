@@ -23,7 +23,7 @@
 #include "Spi.hpp"
 #include "Gpio.hpp"
 #include "RegConfiguration.hpp"
-#include "RFBeeDataFrame.hpp"
+#include "IDataFrame.hpp"
 
 /**
  * Represents a CC1101 based RF communication module.
@@ -33,9 +33,9 @@ class Device {
 	Gpio* gpio;
 
 public:
-	RFBeeDataFrame* dataFrame;
+	IDataFrame* dataFrame;
 
-	Device(Spi* spi, Gpio* gpio, RFBeeDataFrame* dataFrame);
+	Device(Spi* spi, Gpio* gpio, IDataFrame* dataFrame);
 
 	void reset();
 	void configureRegisters(RegConfiguration* configuration);

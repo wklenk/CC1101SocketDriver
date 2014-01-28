@@ -27,7 +27,7 @@
 #include "Device.hpp"
 
 
-Device::Device(Spi* spi, Gpio* gpio, RFBeeDataFrame* dataFrame) {
+Device::Device(Spi* spi, Gpio* gpio, IDataFrame* dataFrame) {
 	this->spi = spi;
 	this->gpio = gpio;
 	this->dataFrame = dataFrame;
