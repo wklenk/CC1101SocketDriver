@@ -1,3 +1,6 @@
 .project
 .cproject
 Debug
+.settings/ilg.gnuarmeclipse.managedbuild.cross.prefs
+
+.settings/language.settings.xml

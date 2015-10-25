@@ -26,7 +26,7 @@
 #include "RegConfiguration.hpp"
 
 /**
- * Register configuration for Honeywell HR80 radiator controller.
+ * Register configuration for HR80 radiator controller.
  */
 class RegConfigurationHR80 : public RegConfiguration {
 private:
