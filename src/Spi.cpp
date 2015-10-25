@@ -56,13 +56,19 @@ uint8_t Spi::readSingleByte(const uint8_t address, uint8_t& value) {
 	uint8_t rx[LEN];
 
 	struct spi_ioc_transfer tr;
+	memset(&tr, 0, sizeof tr);
+
 	tr.tx_buf = (unsigned long)tx;
 	tr.rx_buf = (unsigned long)rx;
 	tr.len = LEN;
 	tr.speed_hz = this->speed;
 	tr.bits_per_word = this->bits;
 
-	ioctl(this->fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	int rc = ioctl(this->fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	if (rc < 0) {
+		perror("SPI single byte read failed");
+		abort();
+	}
 
 	value = rx[1];
 
@@ -88,13 +94,19 @@ uint8_t Spi::readBurst(const uint8_t address, uint8_t buffer[], const size_t nby
 	memset(rx, 0x00, LEN);
 
 	struct spi_ioc_transfer tr;
+	memset(&tr, 0, sizeof tr);
+
 	tr.tx_buf = (unsigned long)tx;
 	tr.rx_buf = (unsigned long)rx;
 	tr.len = LEN;
 	tr.speed_hz = this->speed;
 	tr.bits_per_word = this->bits;
 
-	ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	int rc = ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	if (rc < 0) {
+		perror("SPI burst read failed");
+		abort();
+	}
 
 	memcpy(buffer, rx+1, nbytes);
 
@@ -122,13 +134,19 @@ uint8_t Spi::readStrobe(const uint8_t address)
 	uint8_t rx[1];
 
 	struct spi_ioc_transfer tr;
+	memset(&tr, 0, sizeof tr);
+
 	tr.tx_buf = (unsigned long)tx;
 	tr.rx_buf = (unsigned long)rx;
 	tr.len = 1;
 	tr.speed_hz = this->speed;
 	tr.bits_per_word = this->bits;
 
-	ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	int rc = ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	if (rc < 0) {
+		perror("SPI strobe read failed");
+		abort();
+	}
 
 	/*
 	DateTime::print();
@@ -149,13 +167,19 @@ uint8_t Spi::writeSingleByte(const uint8_t address, const uint8_t value) {
 	memset(rx, 0x00, LEN);
 
 	struct spi_ioc_transfer tr ;
+	memset(&tr, 0, sizeof tr);
+
 	tr.tx_buf = (unsigned long)tx;
 	tr.rx_buf = (unsigned long)rx;
 	tr.len = LEN;
 	tr.speed_hz = this->speed;
 	tr.bits_per_word = this->bits;
 
-	ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	int rc = ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	if (rc < 0) {
+		perror("SPI single byte write failed");
+		abort();
+	}
 
 	return rx[0];
 }
@@ -171,13 +195,19 @@ uint8_t Spi::writeBurst(const uint8_t address, const uint8_t buffer[], const siz
 	memset(rx, 0x00, LEN);
 
 	struct spi_ioc_transfer tr ;
-	tr.tx_buf = (unsigned long)tx;
-	tr.rx_buf = (unsigned long)rx;
+	memset(&tr, 0, sizeof tr);
+
+	tr.tx_buf = (unsigned long) tx;
+	tr.rx_buf = (unsigned long) rx;
 	tr.len = LEN;
 	tr.speed_hz = this->speed;
 	tr.bits_per_word = this->bits;
 
-	ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	int rc = ioctl(fd_spi, SPI_IOC_MESSAGE(1), &tr);
+	if (rc < 0) {
+		perror("SPI burst write failed");
+		abort();
+	}
 
 	return rx[0];
 }

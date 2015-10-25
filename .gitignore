@@ -4,3 +4,5 @@ Debug
 .settings/ilg.gnuarmeclipse.managedbuild.cross.prefs
 
 .settings/language.settings.xml
+
+.settings/org.eclipse.cdt.core.prefs
