@@ -21,7 +21,7 @@ This is the right place for you, if you ...
 Check out my blog at http://wolfgangklenk.wordpress.com
 
 ##How to compile?
-Just copy the source files (.cpp and .hpp) into a Raspberry pi and compile the stuff using g++.
+Easiest way: Just copy the source files (.cpp and .hpp) into a Raspberry pi and compile the stuff using g++.
 
 `g++ *.cpp`
 

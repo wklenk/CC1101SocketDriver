@@ -82,10 +82,6 @@ void Manchester::encodeByte(uint8_t *unencoded, uint8_t *encoded)
 	*(encoded + 1) = manchEncodeTab[data0];
 }
 
-/**
- * Returns MAN_DECODING_ERROR if decoding is not possible,
- * or MAN_DECODING_OK if decoding was successful.
- */
 uint8_t Manchester::decodeByte(uint8_t *undecoded, uint8_t *decoded)
 {
 	uint8_t data0, data1, data2, data3;
@@ -121,9 +117,6 @@ uint8_t Manchester::encode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t 
 	return outputBufferLen;
 }
 
-/**
- * Returns 0 if decoding fails.
- */
 uint8_t Manchester::decode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen)
 {
 	for (int i=0 ; i<inputBufferLen ; i+=2) {
@@ -137,7 +130,3 @@ uint8_t Manchester::decode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t 
 
 	return outputBufferLen;
 }
-
-
-
-
