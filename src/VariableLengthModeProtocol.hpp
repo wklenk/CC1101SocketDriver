@@ -21,7 +21,6 @@
 #define VARIABLELENGTHMODEPROTOCOL_HPP_
 
 #include "Spi.hpp"
-#include "Gpio.hpp"
 #include "Protocol.hpp"
 
 /**
@@ -32,15 +31,24 @@
  */
 class VariableLengthModeProtocol : public Protocol {
 
+public:
+	static const int FIFO_LENGTH = 64;
+
+	VariableLengthModeProtocol(Spi* spi);
+
+	/**
+	 * Note: RSSI and LQI are appended to the end of the message.
+	 */
+	int receive(uint8_t buffer[], size_t& nbytes);
+
+	int transmit(const uint8_t buffer[], size_t nbytes);
+
 private:
 	Spi* spi;
-	Gpio* gpio;
+	uint8_t fifo[FIFO_LENGTH];
 
-public:
-	VariableLengthModeProtocol(Spi* spi, Gpio* gpio);
-
-	int receive(uint8_t buffer[], size_t& nbytes);
-	int transmit(const uint8_t buffer[], size_t nbytes);
+	// For debugging: How many bytes were read in the loop
+	uint8_t t_rxbytes[FIFO_LENGTH];
 };
 
 #endif /* VARIABLELENGTHMODEPROTOCOL_HPP_ */

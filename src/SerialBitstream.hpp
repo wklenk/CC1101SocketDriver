@@ -17,23 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADRESSSPACE_HPP_
-#define ADRESSSPACE_HPP_
+#ifndef SERIAL_BITSTREAM_H_
+#define SERIAL_BITSTREAM_H_
+
+#define DEBUG_SHOW_HEX
+//#define DEBUG_SHOW_BINARY
 
 #include <stdint.h>
 
-static const uint8_t ADDR_LQI       = 0x33;
-static const uint8_t ADDR_RSSI      = 0x34;
-static const uint8_t ADDR_TX_BYTES  = 0x3A;
-static const uint8_t ADDR_RX_BYTES  = 0x3B;
-static const uint8_t ADDR_RXTX_FIFO = 0x3F;
+class SerialBitstream {
 
-static const uint8_t STROBE_SRES = 0x30; // Reset chip.
-static const uint8_t STROBE_SRX  = 0x34; // Enable RX.
-static const uint8_t STROBE_STX  = 0x35; // Enable TX.
-static const uint8_t STROBE_SFRX = 0x3A; // Flush the RX FIFO buffer.
-static const uint8_t STROBE_SFTX = 0x3B; // Flush the TX FIFO buffer.
-static const uint8_t STROBE_SNOP = 0x3D; // No operation
+public:
+	SerialBitstream();
 
+	void decode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen);
+	void encode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen);
 
-#endif /* ADRESSSPACE_HPP_ */
+	void show(uint8_t* buffer, size_t len);
+
+};
+
+#endif /* SERIAL_BITSTREAM_H_ */

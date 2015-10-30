@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REGCONFIGURATIONHR80_HPP_
-#define REGCONFIGURATIONHR80_HPP_
+#ifndef REGCONFIGURATIONHRRADIATORCONTROLLER_HPP_
+#define REGCONFIGURATIONHRRADIATORCONTROLLER_HPP_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -26,9 +26,9 @@
 #include "RegConfiguration.hpp"
 
 /**
- * Register configuration for HR80 radiator controller.
+ * Register configuration for electronic radiator controller.
  */
-class RegConfigurationHR80 : public RegConfiguration {
+class RegConfigurationRadiatorController : public RegConfiguration {
 private:
 	static const uint8_t register_configuration[];
 
@@ -39,4 +39,4 @@ public:
 };
 
 
-#endif /* REGCONFIGURATIONHR80_HPP_ */
+#endif /* REGCONFIGURATIONHRRADIATORCONTROLLER_HPP_ */

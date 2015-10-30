@@ -59,8 +59,8 @@ int Device::blockingRead(int otherFd, int timeoutMillis) {
 			// GPIO input pin raised -> data available
 			assert(this->dataFrame != NULL);
 			if (this->dataFrame->receive() < 0) {
-				// CRC error
-				// Try to read the next incoming message.
+				// Some kind of error reading and decoding data.
+				// Just ignore and try to read the next incoming message.
 			} else {
 				return rc;
 			}

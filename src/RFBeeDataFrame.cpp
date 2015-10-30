@@ -43,8 +43,6 @@ static int RSSIDecode(uint8_t rssiEnc){
 	}
 
 	return rssi - 74;
-
-  return rssi;
 }
 
 RFBeeDataFrame::RFBeeDataFrame(Protocol* protocol) : IDataFrame(protocol) {

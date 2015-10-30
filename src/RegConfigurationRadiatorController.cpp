@@ -17,9 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RegConfigurationHR80.hpp"
+#include "RegConfigurationRadiatorController.hpp"
 
-const uint8_t RegConfigurationHR80::register_configuration[] = {
+const uint8_t RegConfigurationRadiatorController::register_configuration[] = {
 		0x04,   // IOCFG2: GDO2 - Asserts when the RX FIFO has overflowed. De-asserts when the FIFO has been flushed.
 		0x2E,   // IOCFG1: GDO1
 		0x2E,   // IOCFG0: GDO0

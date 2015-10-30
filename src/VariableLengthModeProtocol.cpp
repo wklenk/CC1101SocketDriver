@@ -27,14 +27,8 @@
 
 #include "VariableLengthModeProtocol.hpp"
 
-const int FIFO_LENGTH = 64;
-uint8_t fifo[FIFO_LENGTH];
-
-uint8_t t_rxbytes[FIFO_LENGTH];
-
-VariableLengthModeProtocol::VariableLengthModeProtocol(Spi* spi, Gpio* gpio) {
+VariableLengthModeProtocol::VariableLengthModeProtocol(Spi* spi) {
 	this->spi = spi;
-	this->gpio = gpio;
 }
 
 /**
@@ -42,8 +36,10 @@ VariableLengthModeProtocol::VariableLengthModeProtocol(Spi* spi, Gpio* gpio) {
  * We use the "variable packet length mode", so the first byte of the received
  * data specifies the payload length. The payload length is limited to 255 bytes.
  *
+ * Note: RSSI and LQI are appended to the end of the message.
+ *
  * The caller is responsible to provide a buffer that provides space for at
- * least 255(+2 bytes for RSSI and LQI) bytes.
+ * least 255 + 2 = 257 bytes.
  *
  * The code is kind of time critical: Don't add statements that cause
  * additional I/O operations (e.g. debug printf statements). Doing so may
@@ -53,7 +49,7 @@ int VariableLengthModeProtocol::receive(uint8_t buffer[], size_t& nbytes) {
 
 	int cnt = 0;
 
-	// When this method is entered, when RX FIFO is filled at or above
+	// When this method is entered, then RX FIFO is filled at or above
 	// the RX FIFO threshold or the end of packet is reached.
 	// See CC1101 configuration register IOCFG2 = 0x01
 

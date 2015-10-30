@@ -29,9 +29,11 @@
 #include "RawDataFrame.hpp"
 #include "DateTime.hpp"
 #include "VariableLengthModeProtocol.hpp"
+#include "FifoOverflowProtocol.hpp"
 #include "Protocol.hpp"
-#include "RegConfigurationHR80.hpp"
+#include "RadiatorControllerDataFrame.hpp"
 #include "RegConfigurationProfile0_27MHz.hpp"
+#include "RegConfigurationRadiatorController.hpp"
 
 const int PORT = 50000;
 
@@ -47,16 +49,30 @@ int main(int argc, char** argv) {
 	gpio.exportPin();
 	gpio.setPinDirection(Gpio::DIRECTION_IN);
 
-	VariableLengthModeProtocol protocol(&spi, &gpio);
+	// --------
+	// Protocol
+	// --------
 
-	// Select a data frame format
+	VariableLengthModeProtocol protocol(&spi);
+	//FifoOverflowProtocol protocol(&spi);
+
+	// -----------------
+	// Data Frame Format
+	// -----------------
+
 	RFBeeDataFrame dataFrame(&protocol);
 	//RawDataFrame dataFrame(&protocol);
+	//RadiatorControllerDataFrame dataFrame(&protocol);
 
 	// Set up the RF module
 	Device device(&spi, &gpio, &dataFrame);
 	device.reset();
-	//device.configureRegisters(new RegConfigurationHR80());
+
+	// -----------------------------
+	// CC1101 Register Configuration
+	// -----------------------------
+
+	//device.configureRegisters(new RegConfigurationRadiatorController());
 	device.configureRegisters(new RegConfigurationProfile0_27MHz());
 
 	SocketServer serverSocket(&device);

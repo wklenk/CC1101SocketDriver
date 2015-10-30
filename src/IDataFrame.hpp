@@ -45,6 +45,11 @@ public:
 	/**
 	 * Receive data bytes over the air and structure them into fields.
 	 * Only call this method if there is some data in the RX FIFO.
+	 *
+	 *
+	 * Returns 0 if a valid data frame could be read from the RX FIFO
+	 * and decoded successfully.
+	 * Returns -1 on error.
 	 */
 	virtual int receive() = 0;
 

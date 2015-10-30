@@ -22,13 +22,19 @@
 
 /**
  * A protocol is used to receive or transmit a message.
+ * It can make use of different strategies WHEN and HOW to read the data
+ * from the CC1101's FIFO buffer.
  */
 class Protocol {
 
 public:
 	virtual ~Protocol() {};
 
+	/**
+	 * Note: RSSI and LQI are appended to the end of the message.
+	 */
 	virtual int receive(uint8_t buffer[], size_t& nbytes) = 0;
+
 	virtual int transmit(const uint8_t buffer[], size_t nbytes) = 0;
 };
 
