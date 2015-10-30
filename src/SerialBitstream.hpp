@@ -25,16 +25,49 @@
 
 #include <stdint.h>
 
+/**
+ * Assumes that the output of a serial communication stream/line, including start- and stop-bits
+ * is send over the air. The order of the bits in the bytes has also to be reversed as the data
+ * is mapped to a buffer of bytes.
+ */
 class SerialBitstream {
 
 public:
 	SerialBitstream();
 
+	/**
+	 * From a serial bitstream, removes the start- and stop-bits from the bit stream and reverses
+	 * the bit order. The result is a buffer of bytes.
+	 * The caller is responsible to provide a buffer for the resulting decoded bytes
+	 * that is big enough (at least 4/5 as big as the input buffer)
+	 *
+	 * @param inputBuffer Buffer of undecoded bytes.
+	 * @param inputBufferLen Length of the buffer of undecoded bytes.
+	 * @param outputBuffer Resulting buffer of decoded bytes.
+	 * @param outputBufferLen Length of the resulting buffer of decoded bytes.
+	 */
 	void decode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen);
+
+	/**
+	 * From a buffer of bytes, reverses the bit order of the input buffer and adds a start bit
+	 * before and a stop bit after each byte. The result is a serial bitstream.
+	 * The caller is responsible to provide a buffer for the resulting encoded bytes
+	 * that is big enough (at least 5/4 as big as the input buffer).
+	 *
+	 * @param inputBuffer Buffer of unencoded bytes.
+	 * @param inputBufferLen Length of the buffer of unencoded bytes.
+	 * @param outputBuffer Resulting buffer of encoded bytes.
+	 * @param outputBufferLen Length of resulting buffer of encoded bytes.
+	 */
 	void encode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen);
 
+	/**
+	 * Prints the specified buffer.
+	 *
+	 * @param buffer Buffer of bytes to print out.
+	 * @param len Length of this buffer.
+	 */
 	void show(uint8_t* buffer, size_t len);
-
 };
 
 #endif /* SERIAL_BITSTREAM_H_ */

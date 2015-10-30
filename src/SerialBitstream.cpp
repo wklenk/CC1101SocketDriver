@@ -32,15 +32,7 @@ using namespace std;
 SerialBitstream::SerialBitstream() {
 }
 
-/**
- * Assumes that the bit stream was sent by over the air using a start- and stop-bit.
- * This method removes these 2 bits from the bit stream and reverses the bit order.
- *
- * @param inputBuffer Points to the undecoded data.
- * @param inputBufferLen Number of bytes of undecoded data.
- * @param outputBuffer Points to the decoded data.
- * @param outputBufferLen Number of bytes of decoded data.
- */
+
 void SerialBitstream::decode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_t *outputBuffer, size_t& outputBufferLen) {
 
 	// Remove the start- and stop-bits in the bitstream
@@ -156,14 +148,6 @@ void SerialBitstream::encode(uint8_t *inputBuffer, size_t inputBufferLen, uint8_
 
 }
 
-
-
-/**
- * Displays the buffer in binary/hex format.
- *
- * @param buffer The buffer to use.
- * @param len Number of bytes in the buffer.
- */
 void SerialBitstream::show(uint8_t* buffer, size_t len)
 {
 #ifdef DEBUG_SHOW_HEX
